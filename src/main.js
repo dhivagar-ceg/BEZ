@@ -7,10 +7,10 @@ const start = async () => {
     container: document.querySelector("#ar-container"),
     imageTargetSrc: "./targets1.mind"
   });
+
   const { renderer, scene, camera } = mindarThree;
   const anchor = mindarThree.addAnchor(0);
 
-  // Lights
   scene.add(new THREE.AmbientLight(0xffffff, 0.8));
   const dir = new THREE.DirectionalLight(0xffffff, 1);
   dir.position.set(0, 2, 2);
@@ -20,7 +20,6 @@ const start = async () => {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
 
-  // Avatar
   const gltf = await new GLTFLoader().loadAsync("./2.glb");
   const avatar = gltf.scene;
   avatar.scale.set(0.35, 0.35, 0.35);
@@ -30,190 +29,280 @@ const start = async () => {
   const mixer = new THREE.AnimationMixer(avatar);
   mixer.clipAction(gltf.animations[0]).play();
 
-  // Header logo
-  const header = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.5, 0.35),
-    new THREE.MeshBasicMaterial({
-      map: new THREE.TextureLoader().load("./header.png"),
-      transparent: true
-    })
-  );
-  header.position.set(0, 1, 0.01); header.visible = false;
-  anchor.group.add(header);
-
-  // Videos
-  const videoFiles = ["bez1.mp4","bez2.mp4","bez3.mp4","bez1.mp4"];
-  const videoPositions = [[-0.9,0.1],[ -0.3,0.1],[0.3,0.1],[0.9,0.1]];
-  const videoPlanes = [];
-  for (let i=0; i<videoFiles.length; i++) {
-    const vid = document.createElement("video");
-    vid.src = videoFiles[i]; vid.loop = false; vid.muted = true;
-    vid.playsInline = true; vid.crossOrigin = "anonymous";
-    const tex = new THREE.VideoTexture(vid);
-    const p = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.7, 0.4),
-      new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
-    );
-    p.position.set(...videoPositions[i], 0);
-    p.visible = false;
-    anchor.group.add(p);
-    videoPlanes.push({ plane: p, video: vid });
-  }
-
-  // Output helper functions
   const clickable = [];
-  const createButton = (img, x,y,w,h, cb) => {
-    const t = new THREE.TextureLoader().load(img);
+  const createButton = (img, x, y, w, h, cb) => {
+    const tex = new THREE.TextureLoader().load(img);
     const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(w,h),
-      new THREE.MeshBasicMaterial({ map:t, transparent:true })
+      new THREE.PlaneGeometry(w, h),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true })
     );
-    mesh.position.set(x,y,0.1);
-    mesh.userData.onClick = cb;
+    mesh.position.set(x, y, 0.2); // Z changed from 0.1 to 0.2
     mesh.visible = false;
+    mesh.renderOrder = 999; // Ensure button is drawn above others
+    mesh.userData.onClick = cb;
     anchor.group.add(mesh);
     clickable.push(mesh);
     return mesh;
   };
 
-  const createCard = (title,cat,text,img,x,y=0.6) => {
-    const grp = new THREE.Group();
-    const tex = new THREE.TextureLoader().load(img);
-    const pic = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.5,0.33),
-      new THREE.MeshBasicMaterial({ map: tex })
-    );
-    pic.position.set(0,0.2,0);
-    grp.add(pic);
+const createImageCardWithText = (img, title, desc, x, y, link, overlayText = false) => {
+  const group = new THREE.Group();
+
+  const tex = new THREE.TextureLoader().load(img);
+  const image = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.5, 0.35),
+    new THREE.MeshBasicMaterial({ map: tex })
+  );
+  image.position.set(0, 0, 0);
+  
+  // 🔥 Make the image itself clickable
+  image.userData.onClick = () => window.open(link, '_blank');
+  clickable.push(image);
+
+  group.add(image);
+
+  if (overlayText) {
     const canvas = document.createElement("canvas");
-    canvas.width=512;canvas.height=256;
+    canvas.width = 512;
+    canvas.height = 128;
     const ctx = canvas.getContext("2d");
-    ctx.fillStyle="#000";ctx.fillRect(0,0,512,256);
-    ctx.fillStyle="#fff";ctx.font="bold 24px Arial";
-    ctx.fillText(cat, 20,40);
-    ctx.fillText(title,20,80);
-    ctx.font="18px Arial";
-    ctx.fillText(text,20,130);
-    const infoTex = new THREE.CanvasTexture(canvas);
-    const infoP = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.5,0.25),
-      new THREE.MeshBasicMaterial({ map: infoTex })
+
+    ctx.fillStyle = "black";
+    ctx.textAlign = "center";
+    ctx.font = "40px sans-serif";
+    ctx.fillText(title, canvas.width / 2, 80);
+
+    const tex2 = new THREE.CanvasTexture(canvas);
+    const textPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.5, 0.15),
+      new THREE.MeshBasicMaterial({ map: tex2, transparent: true })
     );
-    infoP.position.set(0,-0.25,0);
-    grp.add(infoP);
-    grp.position.set(x,y,0.2);
-    grp.visible = false;
-    anchor.group.add(grp);
-    return grp;
-  };
+    textPlane.position.set(0, 0, 0.01);
+    group.add(textPlane);
+  } else {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 180;
+    const ctx = canvas.getContext("2d");
 
-  const createGallery = (imgs, xStart, yStart) => {
-    return imgs.map((url,i) => {
-      const x = xStart + (i % 3) * 0.7;
-      const y = yStart - Math.floor(i/3) * 0.5;
-      return createCard("", "", "", url, x, y);
-    });
-  };
+    ctx.fillStyle = "black";
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = "white";
+    ctx.textAlign = "center";
+    ctx.font = "bold 24px sans-serif";
+    ctx.fillText(title, canvas.width / 2, 40);
 
-  // Sections
-  const cards = [
-    createCard("National Geographic","Fashion","Curiosity.","./case1.png",-0.9,0.6),
-    createCard("Lamborghini","Auto","Rev story.","./case2.png",0,0.6),
-    createCard("Hello Bello","Services","Culinary.","./case3.png",0.9,0.6),
-    createCard("Nike","Sports","Just do it.","./case4.png",-0.9,0),
-    createCard("Tesla","Tech","Future drives.","./case5.png",0,0),
-    createCard("Disney","Entertainment","Dreamcreate.","./case6.png",0.9,0)
+    if (desc) {
+      ctx.font = "16px sans-serif";
+      const words = desc.split(' ');
+      let line = '';
+      let y = 75;
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line + words[i] + ' ';
+        const metrics = ctx.measureText(testLine);
+        if (metrics.width > 450 && line.length > 0) {
+          ctx.fillText(line, canvas.width / 2, y);
+          line = words[i] + ' ';
+          y += 22;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, canvas.width / 2, y);
+    }
+
+    const tex2 = new THREE.CanvasTexture(canvas);
+    const textPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.5, 0.25),
+      new THREE.MeshBasicMaterial({ map: tex2, transparent: true })
+    );
+    textPlane.position.set(0, -0.3, 0.01);
+    group.add(textPlane);
+  }
+
+  group.position.set(x, y, 0.1);
+  group.visible = false;
+
+  anchor.group.add(group);
+  return group;
+};
+
+  const header = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.8, 0.2),
+    new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("./header.png"), transparent: true })
+  );
+  header.position.set(0, 0.8, 0.1);
+  header.visible = false;
+  anchor.group.add(header);
+
+  const caseStudies = [
+    createImageCardWithText("./case1.png", "Fashion", "National Geographic, With National Geographic, we captured the novel journey of their Melbourne store opening, crafting visuals that epitomize the spirit of inquisitiveness.", -0.7, 1, "https://www.bez.agency/case-study/national-geographic/"),
+    createImageCardWithText("./case2.png", "Automotive", "Lamborghini, With Lamborghini, every rev tells a story. From launching the Huracan STO in Australia to documenting the exclusive arrival of the Lamborghini Countach, our photo and video content has raced through Lamborghini’s global networks, echoing the brand’s unparalleled prestige and performance.", 0, 1, "https://www.bez.agency/case-study/lamborghini/"),
+    createImageCardWithText("./case3.png", "Services", "Hello Bello, Embarking on a culinary voyage with Hello Bello Pizza, we created a suite of photos illuminating their range of woodfired pizzas, hearty pastas, and refreshing drinks, primed for social showcasing and UberEats allure.", 0.7, 1, "https://www.bez.agency/case-study/hello-bello/"),
+
+    createImageCardWithText("./case4.png", "Technology", "Diving into the technical narrative with 1MILLIKELVIN, we utilized video production to unravel a pioneering thermoelastic stress imaging system, bridging keen scientific innovation with relatable storytelling, unveiling a future where stress analysis is simplified, precise, and user-friendly.", -0.6, -0.6, "https://www.bez.agency/case-study/1millikelvin/"),
+    createImageCardWithText("./case5.png", "Products & Manufacturing", "Collaborating with VicRoads Custom Plates, we showcased a myriad of custom plate designs through engaging campaigns across Victoria, emphasizing the joy of personalization.", 0, -0.6, "https://www.bez.agency/case-study/vicroads-custom-plates/"),
+    createImageCardWithText("./case6.png", "Fashion", "Controversial Watches, Setting the stage for Controversial Watches, our lens narrated the elegance and bold demeanor of their timepieces, showcasing a blend of tradition and modernity in every tick and tock.", 0.6, -0.6, "https://www.bez.agency/case-study/controversial-watches/")
   ];
 
-  const aboutGallery = createGallery(
-    ["./brand1.png","./web1.png","./pack1.png","./media1.png","./photo1.png","./video1.png"],
-    -0.9, 0.6
-  );
+const aboutGallery = [
+  createImageCardWithText(
+    "./video.png",
+    "Video Production",
+    "Transforming Visions to Visible Results",
+    0, 1.1,
+    "https://www.bez.agency/services/video-production/"
+  ),
+  createImageCardWithText(
+    "./photo.png",
+    "Photography",
+    "Framing Shots That Elevate Your Presence",
+    0, 0.4,
+    "https://www.bez.agency/services/photography/"
+  ),
+  createImageCardWithText(
+    "./social.png",
+    "Social Media Management",
+    "Crafting Conversations That Command Attention",
+    0, -0.3,
+    "https://www.bez.agency/services/social-media-management/"
+  )
+];
 
-  // Controls
-  let introPlayed = false;
-  const showMain = () => {
-    avatar.visible=true; header.visible=true;
-    backBtn.visible=false;
-    menuBtns.forEach(b=>b.visible=true);
-    site.visible=contact.visible=true;
-    videoPlanes.forEach(({plane,video})=>{plane.visible=false; video.pause();});
-    cards.forEach(c=>c.visible=false);
-    aboutGallery.forEach(g=>g.visible=false);
-  };
-  const showContent = () => {
-    avatar.visible=true; header.visible=false;
-    menuBtns.forEach(b=>b.visible=false);
-    backBtn.visible=true; site.visible=contact.visible=true;
-    cards.forEach(c=>c.visible=false);
-    aboutGallery.forEach(g=>g.visible=false);
-    videoPlanes.forEach(({plane})=>plane.visible=true);
+
+
+
+
+  const videoFiles = ["bez1.mp4", "bez2.mp4", "bez3.mp4", "bez1.mp4"];
+  const videoPositions = [[-1.12, 0.75], [-0.37, 0.75], [0.37, 0.75], [1.12, 0.75]];
+
+  const videoPlanes = [];
+  for (let i = 0; i < videoFiles.length; i++) {
+    const vid = document.createElement("video");
+    vid.src = videoFiles[i];
+    vid.loop = false;
+    vid.muted = false;
+    vid.playsInline = true;
+    vid.crossOrigin = "anonymous";
+    const tex = new THREE.VideoTexture(vid);
+
+    const plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.7, 0.4),
+      new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
+    );
+    plane.position.set(...videoPositions[i], 0);
+    plane.visible = false;
+    anchor.group.add(plane);
+    videoPlanes.push({ plane, video: vid });
+  }
+
+  const menuBtns = [
+    createButton("./content.png", 0, -0.55, 0.6, 0.12, showContent),
+    createButton("./case.png", 0, -0.73, 0.6, 0.12, showCaseStudies),
+    createButton("./about.png", 0, -0.92, 0.6, 0.12, showAboutUs)
+  ];
+
+  const backBtn = createButton("./backbtn.png", -1.34, 1.1, 0.2, 0.2, showMain);
+  const site = createButton("./website.png", -0.5, -1.2, 0.4, 0.12, () => window.open("https://www.bez.agency"));
+  const contact = createButton("./contact.png", 0.5, -1.2, 0.4, 0.12, () => window.open("mailto:bez@gmail.com"));
+
+  function showMain() {
+    avatar.visible = true;
+    avatar.position.set(0, 0, 0);
+    header.visible = true;
+    menuBtns.forEach(b => b.visible = true);
+    backBtn.visible = false;
+    site.visible = contact.visible = true;
+    videoPlanes.forEach(v => { v.plane.visible = false; v.video.pause(); });
+    caseStudies.forEach(c => c.visible = false);
+    aboutGallery.forEach(a => a.visible = false);
+  }
+
+  function showContent() {
+    avatar.visible = true;
+    header.visible = false;
+    menuBtns.forEach(b => b.visible = false);
+    backBtn.visible = true;
+    site.visible = contact.visible = true;
+    videoPlanes.forEach(v => v.plane.visible = true);
+    caseStudies.forEach(c => c.visible = false);
+    aboutGallery.forEach(a => a.visible = false);
+
     (async () => {
-      for (let i=0; i<videoPlanes.length; i++){
-        avatar.position.set(...videoPositions[i],0);
-        videoPlanes.forEach((v,j)=>i===j?v.video.play():v.video.pause());
-        await new Promise(r=>videoPlanes[i].video.onended=r);
+      for (let i = 0; i < videoPlanes.length; i++) {
+        avatar.position.set(...videoPositions[i], 0);
+        videoPlanes.forEach((v, j) => i === j ? v.video.play() : v.video.pause());
+        await new Promise(r => videoPlanes[i].video.onended = r);
       }
       showMain();
     })();
-  };
-  const showCases = () => {
-    avatar.visible=false; header.visible=false;
-    menuBtns.forEach(b=>b.visible=false);
-    backBtn.visible=true; site.visible=contact.visible=true;
-    videoPlanes.forEach(({plane})=>plane.visible=false);
-    aboutGallery.forEach(g=>g.visible=false);
-    cards.forEach(c=>c.visible=true);
-  };
-  const showAbout = () => {
-    avatar.visible=true; header.visible=false;
-    menuBtns.forEach(b=>b.visible=false);
-    backBtn.visible=true; site.visible=contact.visible=true;
-    videoPlanes.forEach(({plane})=>plane.visible=false);
-    cards.forEach(c=>c.visible=false);
-    aboutGallery.forEach(g=>g.visible=true);
-  };
+  }
 
-  // Buttons
-  const menuBtns = [
-    createButton("./content.png",0,-0.6,0.8,0.18, showContent),
-    createButton("./case.png",0,-0.9,0.8,0.18, showCases),
-    createButton("./about.png",0,-1.2,0.8,0.18, showAbout)
-  ];
-  const site = createButton("./website.png",-0.6,-1.6,0.5,0.14,()=>window.open("https://www.bez.agency"));
-  const contact = createButton("./contact.png",0.6,-1.6,0.5,0.14,()=>window.open("mailto:bez@gmail.com"));
-  const backBtn = createButton("./backbtn.png",-1.2,0.9,0.3,0.2, showMain);
+  function showCaseStudies() {
+    avatar.visible = false;
+    header.visible = false;
+    menuBtns.forEach(b => b.visible = false);
+    backBtn.visible = true;
+    site.visible = contact.visible = true;
+    videoPlanes.forEach(v => v.plane.visible = false);
+    aboutGallery.forEach(a => a.visible = false);
+    caseStudies.forEach(c => c.visible = true);
+  }
 
+  function showAboutUs() {
+    avatar.visible = false;
+    header.visible = false;
+    menuBtns.forEach(b => b.visible = false);
+    backBtn.visible = true;
+    site.visible = contact.visible = true;
+    videoPlanes.forEach(v => v.plane.visible = false);
+    caseStudies.forEach(c => c.visible = false);
+    aboutGallery.forEach(a => a.visible = true);
+  }
+
+  let introPlayed = false;
   const playIntro = async () => {
     if (introPlayed) return;
-    introPlayed=true;
-    avatar.visible=true; header.visible=false;
+    introPlayed = true;
+
+    avatar.visible = true;
+    avatar.position.set(0, 0, 0);
     mixer.clipAction(gltf.animations[0]).play();
-    await new Promise(r=>setTimeout(r,8000));
+
+    const audio = document.getElementById("intro-audio");
+    if (audio) {
+      try {
+        await audio.play();
+      } catch (e) {
+        console.warn("Autoplay blocked:", e);
+      }
+    }
+
+    await new Promise(r => setTimeout(r, 8000));
     showMain();
   };
 
   window.addEventListener("click", e => {
     const mouse = new THREE.Vector2(
-      (e.clientX/window.innerWidth)*2-1,
-      -(e.clientY/window.innerHeight)*2+1
+      (e.clientX / window.innerWidth) * 2 - 1,
+      -(e.clientY / window.innerHeight) * 2 + 1
     );
     const ray = new THREE.Raycaster();
     ray.setFromCamera(mouse, camera);
-    const hit = ray.intersectObjects(clickable,true);
-    if (hit.length>0 && hit[0].object.userData.onClick){
+    const hit = ray.intersectObjects(clickable, true);
+    if (hit.length > 0 && hit[0].object.userData.onClick) {
       hit[0].object.userData.onClick();
     }
   });
 
   anchor.onTargetFound = playIntro;
-  anchor.onTargetLost = () => {
-    videoPlanes.forEach(v=>v.video.pause());
-  };
+  anchor.onTargetLost = () => videoPlanes.forEach(v => v.video.pause());
 
   await mindarThree.start();
   const clock = new THREE.Clock();
-  renderer.setAnimationLoop(()=>{
+  renderer.setAnimationLoop(() => {
     mixer.update(clock.getDelta());
     renderer.render(scene, camera);
   });
