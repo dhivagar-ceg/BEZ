@@ -1,11 +1,15 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MindARThree } from 'mind-ar/dist/mindar-image-three.prod.js';
+
+// ... your AR logic here ...
 
 const start = async () => {
-  const mindarThree = new window.MindARThree({
+  const mindarThree = new MindARThree({
   container: document.querySelector("#ar-container"),
   imageTargetSrc: "./targets1.mind"
 });
+
 
   const { renderer, scene, camera } = mindarThree;
   const anchor = mindarThree.addAnchor(0);
@@ -170,11 +174,7 @@ const aboutGallery = [
   )
 ];
 
-
-
-
-
-  const videoFiles = ["bez1.mp4", "bez2.mp4", "bez3.mp4", "bez1.mp4"];
+  const videoFiles = ["/bez1.mp4", "/bez2.mp4", "/bez3.mp4", "/bez1.mp4"];
   const videoPositions = [[-1.12, 0.75], [-0.37, 0.75], [0.37, 0.75], [1.12, 0.75]];
 
   const videoPlanes = [];
