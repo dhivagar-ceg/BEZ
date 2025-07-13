@@ -1,8 +1,9 @@
+// vite.config.js
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: './',
+  base: './', // ✅ ensures correct relative paths for Netlify
   build: {
-    outDir: 'dist'
+    outDir: 'dist' // optional, default is 'dist'
   }
 });
