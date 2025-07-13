@@ -7,7 +7,7 @@ import { MindARThree } from 'mind-ar/dist/mindar-image-three.prod.js';
 const start = async () => {
   const mindarThree = new MindARThree({
   container: document.querySelector("#ar-container"),
-  imageTargetSrc: "./targets1.mind"
+  imageTargetSrc: "/targets1.mind"
 });
 
 
@@ -23,7 +23,7 @@ const start = async () => {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1;
 
-  const gltf = await new GLTFLoader().loadAsync("./2.glb");
+  const gltf = await new GLTFLoader().loadAsync("/2.glb");
   const avatar = gltf.scene;
   avatar.scale.set(0.35, 0.35, 0.35);
   avatar.rotation.x = Math.PI / 2;
@@ -141,32 +141,32 @@ const createImageCardWithText = (img, title, desc, x, y, link, overlayText = fal
   anchor.group.add(header);
 
   const caseStudies = [
-    createImageCardWithText("./case1.png", "Fashion", "National Geographic, With National Geographic, we captured the novel journey of their Melbourne store opening, crafting visuals that epitomize the spirit of inquisitiveness.", -0.7, 1, "https://www.bez.agency/case-study/national-geographic/"),
-    createImageCardWithText("./case2.png", "Automotive", "Lamborghini, With Lamborghini, every rev tells a story. From launching the Huracan STO in Australia to documenting the exclusive arrival of the Lamborghini Countach, our photo and video content has raced through Lamborghini’s global networks, echoing the brand’s unparalleled prestige and performance.", 0, 1, "https://www.bez.agency/case-study/lamborghini/"),
-    createImageCardWithText("./case3.png", "Services", "Hello Bello, Embarking on a culinary voyage with Hello Bello Pizza, we created a suite of photos illuminating their range of woodfired pizzas, hearty pastas, and refreshing drinks, primed for social showcasing and UberEats allure.", 0.7, 1, "https://www.bez.agency/case-study/hello-bello/"),
+    createImageCardWithText("/case1.png", "Fashion", "National Geographic, With National Geographic, we captured the novel journey of their Melbourne store opening, crafting visuals that epitomize the spirit of inquisitiveness.", -0.7, 1, "https://www.bez.agency/case-study/national-geographic/"),
+    createImageCardWithText("/case2.png", "Automotive", "Lamborghini, With Lamborghini, every rev tells a story. From launching the Huracan STO in Australia to documenting the exclusive arrival of the Lamborghini Countach, our photo and video content has raced through Lamborghini’s global networks, echoing the brand’s unparalleled prestige and performance.", 0, 1, "https://www.bez.agency/case-study/lamborghini/"),
+    createImageCardWithText("/case3.png", "Services", "Hello Bello, Embarking on a culinary voyage with Hello Bello Pizza, we created a suite of photos illuminating their range of woodfired pizzas, hearty pastas, and refreshing drinks, primed for social showcasing and UberEats allure.", 0.7, 1, "https://www.bez.agency/case-study/hello-bello/"),
 
-    createImageCardWithText("./case4.png", "Technology", "Diving into the technical narrative with 1MILLIKELVIN, we utilized video production to unravel a pioneering thermoelastic stress imaging system, bridging keen scientific innovation with relatable storytelling, unveiling a future where stress analysis is simplified, precise, and user-friendly.", -0.6, -0.6, "https://www.bez.agency/case-study/1millikelvin/"),
-    createImageCardWithText("./case5.png", "Products & Manufacturing", "Collaborating with VicRoads Custom Plates, we showcased a myriad of custom plate designs through engaging campaigns across Victoria, emphasizing the joy of personalization.", 0, -0.6, "https://www.bez.agency/case-study/vicroads-custom-plates/"),
-    createImageCardWithText("./case6.png", "Fashion", "Controversial Watches, Setting the stage for Controversial Watches, our lens narrated the elegance and bold demeanor of their timepieces, showcasing a blend of tradition and modernity in every tick and tock.", 0.6, -0.6, "https://www.bez.agency/case-study/controversial-watches/")
+    createImageCardWithText("/case4.png", "Technology", "Diving into the technical narrative with 1MILLIKELVIN, we utilized video production to unravel a pioneering thermoelastic stress imaging system, bridging keen scientific innovation with relatable storytelling, unveiling a future where stress analysis is simplified, precise, and user-friendly.", -0.6, -0.6, "https://www.bez.agency/case-study/1millikelvin/"),
+    createImageCardWithText("/case5.png", "Products & Manufacturing", "Collaborating with VicRoads Custom Plates, we showcased a myriad of custom plate designs through engaging campaigns across Victoria, emphasizing the joy of personalization.", 0, -0.6, "https://www.bez.agency/case-study/vicroads-custom-plates/"),
+    createImageCardWithText("/case6.png", "Fashion", "Controversial Watches, Setting the stage for Controversial Watches, our lens narrated the elegance and bold demeanor of their timepieces, showcasing a blend of tradition and modernity in every tick and tock.", 0.6, -0.6, "https://www.bez.agency/case-study/controversial-watches/")
   ];
 
 const aboutGallery = [
   createImageCardWithText(
-    "./video.png",
+    "/video.png",
     "Video Production",
     "Transforming Visions to Visible Results",
     0, 1.1,
     "https://www.bez.agency/services/video-production/"
   ),
   createImageCardWithText(
-    "./photo.png",
+    "/photo.png",
     "Photography",
     "Framing Shots That Elevate Your Presence",
     0, 0.4,
     "https://www.bez.agency/services/photography/"
   ),
   createImageCardWithText(
-    "./social.png",
+    "/social.png",
     "Social Media Management",
     "Crafting Conversations That Command Attention",
     0, -0.3,
@@ -198,18 +198,18 @@ const aboutGallery = [
   }
 
   const menuBtns = [
-    createButton("./content.png", 0, -0.55, 0.6, 0.12, showContent),
-    createButton("./case.png", 0, -0.73, 0.6, 0.12, showCaseStudies),
-    createButton("./about.png", 0, -0.92, 0.6, 0.12, showAboutUs)
+    createButton("/content.png", 0, -0.55, 0.6, 0.12, showContent),
+    createButton("/case.png", 0, -0.73, 0.6, 0.12, showCaseStudies),
+    createButton("/about.png", 0, -0.92, 0.6, 0.12, showAboutUs)
   ];
 
-  const backBtn = createButton("./backbtn.png", -1.3, 1.2, 0.2, 0.2, showMain);
-  const site = createButton("./website.png", -0.5, -1.2, 0.4, 0.12, () => {
+  const backBtn = createButton("/backbtn.png", -1.3, 1.2, 0.2, 0.2, showMain);
+  const site = createButton("/website.png", -0.5, -1.2, 0.4, 0.12, () => {
   stopIntroAudio();
   window.open("https://www.bez.agency");
 });
 
-const contact = createButton("./contact.png", 0.5, -1.2, 0.4, 0.12, () => {
+const contact = createButton("/contact.png", 0.5, -1.2, 0.4, 0.12, () => {
   stopIntroAudio();
   window.open("mailto:bez@gmail.com");
 });
