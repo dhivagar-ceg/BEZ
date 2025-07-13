@@ -2,15 +2,14 @@
   "name": "mindar-business-card",
   "version": "1.0.0",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "mind-ar": "^1.2.5",
-    "three": "^0.152.2"
+    "three": "^0.160.0"
   },
   "devDependencies": {
-    "vite": "^5.2.10"
+    "vite": "^5.0.0"
   }
 }
