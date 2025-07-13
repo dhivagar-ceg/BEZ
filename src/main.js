@@ -204,98 +204,125 @@ const aboutGallery = [
     createButton("./about.png", 0, -0.92, 0.6, 0.12, showAboutUs)
   ];
 
-  const backBtn = createButton("./backbtn.png", -1.34, 1.1, 0.2, 0.2, showMain);
-  const site = createButton("./website.png", -0.5, -1.2, 0.4, 0.12, () => window.open("https://www.bez.agency"));
-  const contact = createButton("./contact.png", 0.5, -1.2, 0.4, 0.12, () => window.open("mailto:bez@gmail.com"));
+  const backBtn = createButton("./backbtn.png", -1.3, 1.2, 0.2, 0.2, showMain);
+  const site = createButton("./website.png", -0.5, -1.2, 0.4, 0.12, () => {
+  stopIntroAudio();
+  window.open("https://www.bez.agency");
+});
+
+const contact = createButton("./contact.png", 0.5, -1.2, 0.4, 0.12, () => {
+  stopIntroAudio();
+  window.open("mailto:bez@gmail.com");
+});
+
 
   function showMain() {
-    avatar.visible = true;
-    avatar.position.set(0, 0, 0);
-    header.visible = true;
-    menuBtns.forEach(b => b.visible = true);
-    backBtn.visible = false;
-    site.visible = contact.visible = true;
-    videoPlanes.forEach(v => { v.plane.visible = false; v.video.pause(); });
-    caseStudies.forEach(c => c.visible = false);
-    aboutGallery.forEach(a => a.visible = false);
-  }
+  avatar.visible = true;
+  avatar.position.set(0, 0, 0);
+  header.visible = true;
+  menuBtns.forEach(b => b.visible = true);
+  backBtn.visible = false;
+  site.visible = contact.visible = true;
+  videoPlanes.forEach(v => { v.plane.visible = false; v.video.pause(); });
+  caseStudies.forEach(c => c.visible = false);
+  aboutGallery.forEach(a => a.visible = false);
+}
+
 
   function showContent() {
-    avatar.visible = true;
-    header.visible = false;
-    menuBtns.forEach(b => b.visible = false);
-    backBtn.visible = true;
-    site.visible = contact.visible = true;
-    videoPlanes.forEach(v => v.plane.visible = true);
-    caseStudies.forEach(c => c.visible = false);
-    aboutGallery.forEach(a => a.visible = false);
+  avatar.visible = true;
+  header.visible = false;
+  menuBtns.forEach(b => b.visible = false);
+  backBtn.visible = true;
+  site.visible = contact.visible = true;
+  videoPlanes.forEach(v => v.plane.visible = true);
+  caseStudies.forEach(c => c.visible = false);
+  aboutGallery.forEach(a => a.visible = false);
 
-    (async () => {
-      for (let i = 0; i < videoPlanes.length; i++) {
-        avatar.position.set(...videoPositions[i], 0);
-        videoPlanes.forEach((v, j) => i === j ? v.video.play() : v.video.pause());
-        await new Promise(r => videoPlanes[i].video.onended = r);
-      }
-      showMain();
-    })();
-  }
+  (async () => {
+    for (let i = 0; i < videoPlanes.length; i++) {
+      avatar.position.set(...videoPositions[i], 0);
+      videoPlanes.forEach((v, j) => i === j ? v.video.play() : v.video.pause());
+      await new Promise(r => videoPlanes[i].video.onended = r);
+    }
+    showMain();
+  })();
+}
+
 
   function showCaseStudies() {
-    avatar.visible = false;
-    header.visible = false;
-    menuBtns.forEach(b => b.visible = false);
-    backBtn.visible = true;
-    site.visible = contact.visible = true;
-    videoPlanes.forEach(v => v.plane.visible = false);
-    aboutGallery.forEach(a => a.visible = false);
-    caseStudies.forEach(c => c.visible = true);
+  avatar.visible = false;
+  header.visible = false;
+  menuBtns.forEach(b => b.visible = false);
+  backBtn.visible = true;
+  site.visible = contact.visible = true;
+  videoPlanes.forEach(v => v.plane.visible = false);
+  aboutGallery.forEach(a => a.visible = false);
+  caseStudies.forEach(c => c.visible = true);
+}
+
+function showAboutUs() {
+  avatar.visible = false;
+  header.visible = false;
+  menuBtns.forEach(b => b.visible = false);
+  backBtn.visible = true;
+  site.visible = contact.visible = true;
+  videoPlanes.forEach(v => v.plane.visible = false);
+  caseStudies.forEach(c => c.visible = false);
+  aboutGallery.forEach(a => a.visible = true);
+}
+
+const audio = new Audio("BezVO.mp3");
+audio.loop = false;
+audio.crossOrigin = "anonymous";
+audio.preload = "auto";
+
+let introPlayed = false;
+
+const stopIntroAudio = () => {
+  if (!audio.paused) {
+    audio.pause();
+    audio.currentTime = 0;
+  }
+};
+
+const playIntro = async () => {
+  if (introPlayed) return;
+  introPlayed = true;
+
+  avatar.visible = true;
+  avatar.position.set(0, 0, 0);
+  mixer.clipAction(gltf.animations[0]).play();
+
+  try {
+    await audio.play();
+  } catch (e) {
+    console.warn("Autoplay blocked:", e);
   }
 
-  function showAboutUs() {
-    avatar.visible = false;
-    header.visible = false;
-    menuBtns.forEach(b => b.visible = false);
-    backBtn.visible = true;
-    site.visible = contact.visible = true;
-    videoPlanes.forEach(v => v.plane.visible = false);
-    caseStudies.forEach(c => c.visible = false);
-    aboutGallery.forEach(a => a.visible = true);
+  await new Promise((res) => setTimeout(res, 8000));
+  showMain();
+};
+
+window.addEventListener("click", e => {
+  const mouse = new THREE.Vector2(
+    (e.clientX / window.innerWidth) * 2 - 1,
+    -(e.clientY / window.innerHeight) * 2 + 1
+  );
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(mouse, camera);
+  const hit = ray.intersectObjects(clickable, true);
+  if (hit.length > 0 && hit[0].object.userData.onClick) {
+    // ✅ Stop audio ONLY here
+    if (!audio.paused) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    hit[0].object.userData.onClick();
   }
+});
 
-  let introPlayed = false;
-  const playIntro = async () => {
-    if (introPlayed) return;
-    introPlayed = true;
-
-    avatar.visible = true;
-    avatar.position.set(0, 0, 0);
-    mixer.clipAction(gltf.animations[0]).play();
-
-    const audio = document.getElementById("intro-audio");
-    if (audio) {
-      try {
-        await audio.play();
-      } catch (e) {
-        console.warn("Autoplay blocked:", e);
-      }
-    }
-
-    await new Promise(r => setTimeout(r, 8000));
-    showMain();
-  };
-
-  window.addEventListener("click", e => {
-    const mouse = new THREE.Vector2(
-      (e.clientX / window.innerWidth) * 2 - 1,
-      -(e.clientY / window.innerHeight) * 2 + 1
-    );
-    const ray = new THREE.Raycaster();
-    ray.setFromCamera(mouse, camera);
-    const hit = ray.intersectObjects(clickable, true);
-    if (hit.length > 0 && hit[0].object.userData.onClick) {
-      hit[0].object.userData.onClick();
-    }
-  });
 
   anchor.onTargetFound = playIntro;
   anchor.onTargetLost = () => videoPlanes.forEach(v => v.video.pause());
