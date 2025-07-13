@@ -1,12 +1,11 @@
 import * as THREE from 'three';
-import { MindARThree } from '/libs/mindar-image-three.prod.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 const start = async () => {
-  const mindarThree = new MindARThree({
-    container: document.querySelector("#ar-container"),
-    imageTargetSrc: "./targets1.mind"
-  });
+  const mindarThree = new window.MindARThree({
+  container: document.querySelector("#ar-container"),
+  imageTargetSrc: "./targets1.mind"
+});
 
   const { renderer, scene, camera } = mindarThree;
   const anchor = mindarThree.addAnchor(0);
