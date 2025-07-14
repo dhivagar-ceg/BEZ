@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MindARThree } from 'mind-ar/dist/mindar-image-three.prod.js';
 
 // ... your AR logic here ...
+let contentWalls = [];
 
 const start = async () => {
   const mindarThree = new MindARThree({
@@ -174,28 +175,48 @@ const aboutGallery = [
   )
 ];
 
-  const videoFiles = ["/bez1.mp4", "/bez2.mp4", "/bez3.mp4", "/bez1.mp4"];
-  const videoPositions = [[-1.12, 0.75], [-0.37, 0.75], [0.37, 0.75], [1.12, 0.75]];
+ const videoFiles = ["/bez1.mp4", "/bez2.mp4", "/bez3.mp4", "/bez1.mp4"];
+const videoPositions = [[-1.12, 0], [-0.37, 0], [0.37, 0], [1.12, 0]];
 
-  const videoPlanes = [];
-  for (let i = 0; i < videoFiles.length; i++) {
-    const vid = document.createElement("video");
-    vid.src = videoFiles[i];
-    vid.loop = false;
-    vid.muted = false;
-    vid.playsInline = true;
-    vid.crossOrigin = "anonymous";
-    const tex = new THREE.VideoTexture(vid);
+const videoPlanes = [];
+const contentWalls = [];
 
-    const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.7, 0.4),
-      new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
-    );
-    plane.position.set(...videoPositions[i], 0);
-    plane.visible = false;
-    anchor.group.add(plane);
-    videoPlanes.push({ plane, video: vid });
-  }
+for (let i = 0; i < videoFiles.length; i++) {
+  const vid = document.createElement("video");
+  vid.src = videoFiles[i];
+  vid.loop = false;
+  vid.muted = false;
+  vid.playsInline = true;
+  vid.crossOrigin = "anonymous";
+  const tex = new THREE.VideoTexture(vid);
+
+  const [x, z] = videoPositions[i];
+
+  // 🧱 Black wall standing vertically
+  const wall = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.8, 1),
+    new THREE.MeshBasicMaterial({ color: 0x000000 })
+  );
+  wall.position.set(x, 0.6, z);
+  wall.rotation.set(Math.PI / 2, 0, 0); // 🧱 rotate 90 deg X
+  wall.visible = false;
+  anchor.group.add(wall);
+  contentWalls.push(wall);
+
+  // 📺 Video plane also upright
+  const plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.7, 0.4),
+    new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
+  );
+  plane.position.set(x, 0.6, z + 0.01);
+  plane.rotation.set(Math.PI / 2, 0, 0); // 📺 same as wall
+  plane.visible = false;
+  anchor.group.add(plane);
+
+  videoPlanes.push({ plane, video: vid });
+}
+
+
 
   const menuBtns = [
     createButton("/content.png", 0, -0.55, 0.6, 0.12, showContent),
@@ -203,7 +224,7 @@ const aboutGallery = [
     createButton("/about.png", 0, -0.92, 0.6, 0.12, showAboutUs)
   ];
 
-  const backBtn = createButton("/backbtn.png", -1.3, 1.2, 0.2, 0.2, showMain);
+  const backBtn = createButton("/backbtn.png", -0.8, 0, 0.2, 0.2, showMain);
   const site = createButton("/website.png", -0.5, -1.2, 0.4, 0.12, () => {
   stopIntroAudio();
   window.open("https://www.bez.agency");
@@ -215,7 +236,7 @@ const contact = createButton("/contact.png", 0.5, -1.2, 0.4, 0.12, () => {
 });
 
 
-  function showMain() {
+ function showMain() {
   avatar.visible = true;
   avatar.position.set(0, 0, 0);
   header.visible = true;
@@ -225,16 +246,20 @@ const contact = createButton("/contact.png", 0.5, -1.2, 0.4, 0.12, () => {
   videoPlanes.forEach(v => { v.plane.visible = false; v.video.pause(); });
   caseStudies.forEach(c => c.visible = false);
   aboutGallery.forEach(a => a.visible = false);
+  contentWalls.forEach(w => w.visible = false); // ✅ hide wall
 }
 
 
-  function showContent() {
+
+ function showContent() {
   avatar.visible = true;
   header.visible = false;
   menuBtns.forEach(b => b.visible = false);
   backBtn.visible = true;
   site.visible = contact.visible = true;
+
   videoPlanes.forEach(v => v.plane.visible = true);
+  contentWalls.forEach(w => w.visible = true); // ✅ SHOW wall only here
   caseStudies.forEach(c => c.visible = false);
   aboutGallery.forEach(a => a.visible = false);
 
@@ -249,6 +274,7 @@ const contact = createButton("/contact.png", 0.5, -1.2, 0.4, 0.12, () => {
 }
 
 
+
   function showCaseStudies() {
   avatar.visible = false;
   header.visible = false;
@@ -258,6 +284,8 @@ const contact = createButton("/contact.png", 0.5, -1.2, 0.4, 0.12, () => {
   videoPlanes.forEach(v => v.plane.visible = false);
   aboutGallery.forEach(a => a.visible = false);
   caseStudies.forEach(c => c.visible = true);
+  contentWalls.forEach(w => w.visible = false);
+
 }
 
 function showAboutUs() {
@@ -269,6 +297,8 @@ function showAboutUs() {
   videoPlanes.forEach(v => v.plane.visible = false);
   caseStudies.forEach(c => c.visible = false);
   aboutGallery.forEach(a => a.visible = true);
+  contentWalls.forEach(w => w.visible = false);
+
 }
 
 const audio = new Audio("BezVO.mp3");
@@ -323,8 +353,30 @@ window.addEventListener("click", e => {
 });
 
 
-  anchor.onTargetFound = playIntro;
-  anchor.onTargetLost = () => videoPlanes.forEach(v => v.video.pause());
+  anchor.onTargetLost = () => {
+  videoPlanes.forEach(v => {
+    if (!v.video.paused) {
+      v.wasPlaying = true;
+      v.video.pause();
+    } else {
+      v.wasPlaying = false;
+    }
+  });
+};
+
+anchor.onTargetFound = () => {
+  const isContentPage = videoPlanes.some(v => v.plane.visible);
+  if (isContentPage) {
+    videoPlanes.forEach(v => {
+      if (v.wasPlaying) v.video.play();
+    });
+  } else {
+    playIntro();
+  }
+};
+
+await mindarThree.start();
+
 
   await mindarThree.start();
   const clock = new THREE.Clock();
