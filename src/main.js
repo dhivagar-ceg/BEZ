@@ -208,7 +208,8 @@ for (let i = 0; i < videoFiles.length; i++) {
     new THREE.PlaneGeometry(0.7, 0.4),
     new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
   );
-  plane.position.set(x, 0.6, z + 0.01);
+  plane.position.set(x, 0.55, z + 0.03); // Increased from 0.01 to 0.03
+
   plane.rotation.set(Math.PI / 2, 0, 0); // 📺 same as wall
   plane.visible = false;
   anchor.group.add(plane);
