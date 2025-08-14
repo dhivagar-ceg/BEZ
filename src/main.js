@@ -8,7 +8,7 @@ let contentWalls = [];
 const start = async () => {
   const mindarThree = new MindARThree({
   container: document.querySelector("#ar-container"),
-  imageTargetSrc: "/targets1.mind"
+  imageTargetSrc: "/targetsGreen.mind"
 });
 
 
